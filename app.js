@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const ejs = require('ejs');
 const url = require('url');
+const qs = require('querystring');
 
 const index_page = fs.readFileSync('./index.ejs', 'utf8');
 const other_page = fs.readFileSync('./other.ejs', 'utf8');
@@ -16,30 +17,19 @@ console.log('Server Start!');
 
 //createserverの処理
 function getFromClient(request, response){
-    var url_parts = url.parse(request.url);
+
+    var url_parts = url.parse(request.url, true);
     switch (url_parts.pathname) {
 
         case'/':
-            var content = ejs.render(index_page, {
-                title: "Indexページ",
-                content: "これはテンプレを使ったサンプルページやで"
-            });
-            response.writeHead(200, {'Content-Type': 'text/html'});
-            response.write(content);
-            response.end();
-            break;
+            response_index(request, response);
+            break;            
 
         case'/other':
-            var content = ejs.render(other_page, {
-                title: "Otherページ",
-                content: "これはテンプレを使ったOhterページやで"
-            });
-            response.writeHead(200, {'Content-Type': 'text/html'});
-            response.write(content);
-            response.end();
+            response_other(request, response);
             break;
 
-        case '/style.css':
+        case'/style.css':
             response.writeHead(200, {'Content-Type': 'text/css'});
             response.write(style_css);
             response.end();
@@ -49,5 +39,64 @@ function getFromClient(request, response){
             response.writeHead(200, {'Content-Type': 'text/plain'});
             response.end('no page...');
             break;      
+    }
+}
+
+//　追加データ
+var data = {
+    'Taro':'090-1111-1111',
+    'Hanako':'090-2222-2222',
+    'Sachiko':'090-3333-3333',
+    'Ichiro':'090-4444-4444'
+};
+
+// indexのアクセス処理
+function response_index(request, response) {
+    var msg ="これはIndexページです"
+    var content = ejs.render(index_page, {
+        title: 'Indexページ',
+        content:msg,
+    });
+    response.writeHead(200, {'Content-Type': 'text/html'});
+    response.write(content);
+    response.end();
+}
+
+// otherのアクセス処理
+function response_other(request, response) {
+    var msg = "これはotherページです"
+
+// POSTアクセス処理
+    if (request.method == 'POST') {
+        var body = '';
+
+        //データ受信のイベント処理
+        request.on('data', (data) => {
+            body +=data;
+        });
+
+        // データ受信終了のイベント処理
+        request.on('end',() => {
+            var post_data = qs.parse(body); // データのパース
+            msg += 'あなたは、「' + post_data.msg + 'と書きました。';
+            var content = ejs.render(other_page, {
+                title: 'Other',
+                content: msg,
+            });
+            response.writeHead(200, {'Content-type': 'text/html'});
+            response.write(content);
+            response.end();
+        });
+
+        // GETアクセス時の処理
+    } else {
+        var msg = "ページがありません"
+        var content = ejs.render(other_page, {
+            title:"Other",
+            content:msg,
+        });
+            response.writeHead(200, {'Content-type': 'text/html'});
+            response.write(content);
+            response.end();
     }
 }
