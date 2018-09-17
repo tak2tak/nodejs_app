@@ -47,7 +47,8 @@ var data = {
     'Taro':'090-1111-1111',
     'Hanako':'090-2222-2222',
     'Sachiko':'090-3333-3333',
-    'Ichiro':'090-4444-4444'
+    'Ichiro':'090-4444-4444',
+    'takaya':'090-1223-4122'
 };
 
 // indexのアクセス処理
@@ -56,6 +57,7 @@ function response_index(request, response) {
     var content = ejs.render(index_page, {
         title: 'Indexページ',
         content:msg,
+        data:data,
     });
     response.writeHead(200, {'Content-Type': 'text/html'});
     response.write(content);
